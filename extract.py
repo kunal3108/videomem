@@ -70,6 +70,8 @@ SYSTEM_PROMPT = (
     "- objects: concrete visible things as short lowercase singular nouns (e.g. 'person', 'bottle', 'laptop').\n"
     "- description: one factual sentence about what is visible in that single frame.\n"
     "- actions: only actions clearly visible in that frame (e.g. 'holding bottle'). Empty list if none.\n"
+    "- Return exactly one observation per frame, even when consecutive frames look identical. "
+    "Never merge frames.\n"
     "- Describe only what is visually supported. Never infer what happened between frames. Never guess."
 )
 
@@ -128,10 +130,12 @@ def extract_observations(frames, model=DEFAULT_VISION_MODEL, batch_size=4, detai
              "frames_sent": 0, "batch_size": batch_size, "detail": detail}
     start = time.perf_counter()
     batches = [frames[i:i + batch_size] for i in range(0, len(frames), batch_size)]
-    for bi, batch in enumerate(batches):
+    def analyze(batch):
+        """One vision call for `batch`; returns parsed observations (may be fewer than frames)."""
         timestamps = [t for t, _ in batch]
         content = [{"type": "input_text",
-                    "text": f"{len(batch)} frames follow. Timestamps (seconds): {timestamps}."}]
+                    "text": f"{len(batch)} frames follow. Timestamps (seconds): {timestamps}. "
+                            f"Return exactly {len(batch)} observations, one per timestamp."}]
         for t, jpg in batch:
             content.append({"type": "input_text", "text": f"Frame at t={t}s:"})
             content.append(_image_part(jpg, detail))
@@ -144,20 +148,38 @@ def extract_observations(frames, model=DEFAULT_VISION_MODEL, batch_size=4, detai
                                  "schema": OBS_SCHEMA, "strict": True}},
                 temperature=0,
             )
-            stats["vision_calls"] += 1
-            stats["frames_sent"] += len(batch)
-            u = usage_of(resp)
-            stats["input_tokens"] += u["input_tokens"]
-            stats["output_tokens"] += u["output_tokens"]
-            observations.extend(_parse_batch(resp.output_text, timestamps))
-        except ExtractionError as exc:
-            errors.append(f"batch {bi + 1}: {exc}")
         except Exception as exc:
-            msg = friendly_error(exc)
-            # Auth/quota problems will fail every batch — stop early.
-            if "authentication" in msg.lower() or "quota" in msg.lower() or "missing" in msg.lower():
-                raise ExtractionError(msg) from exc
-            errors.append(f"batch {bi + 1}: {msg}")
+            raise ExtractionError(friendly_error(exc)) from exc
+        stats["vision_calls"] += 1
+        stats["frames_sent"] += len(batch)
+        u = usage_of(resp)
+        stats["input_tokens"] += u["input_tokens"]
+        stats["output_tokens"] += u["output_tokens"]
+        return _parse_batch(resp.output_text, timestamps)
+
+    fatal = ("authentication", "quota", "missing")  # fail every call — stop early
+    for bi, batch in enumerate(batches):
+        try:
+            batch_obs = analyze(batch)
+        except ExtractionError as exc:
+            if any(k in str(exc).lower() for k in fatal):
+                raise
+            errors.append(f"batch {bi + 1}: {exc}")
+            batch_obs = None
+        if batch_obs is not None:
+            # Models often merge near-identical frames into one observation. Re-ask for any
+            # dropped timestamp on its own so every sampled frame lands in memory.
+            got = {o["timestamp"] for o in batch_obs}
+            missing = [f for f in batch if f[0] not in got]
+            stats["frames_retried"] = stats.get("frames_retried", 0) + len(missing)
+            for frame in missing:
+                try:
+                    batch_obs.extend(analyze([frame]))
+                except ExtractionError as exc:
+                    if any(k in str(exc).lower() for k in fatal):
+                        raise
+                    errors.append(f"frame {frame[0]}s: {exc}")
+            observations.extend(sorted(batch_obs, key=lambda o: o["timestamp"]))
         if progress:
             progress((bi + 1) / len(batches), f"Analyzed batch {bi + 1}/{len(batches)}")
     stats["latency_s"] = round(time.perf_counter() - start, 2)
