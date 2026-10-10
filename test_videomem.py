@@ -112,6 +112,19 @@ def test_extraction_with_fake_client():
         pass
 
 
+def test_extraction_retries_merged_frames():
+    frames = [(0.0, b"x"), (2.0, b"x"), (4.0, b"x")]
+    merged = json.dumps({"observations": [
+        {"timestamp": 0.0, "objects": ["bottle"], "description": "a", "actions": []}]})
+    single = lambda t, o: json.dumps({"observations": [
+        {"timestamp": t, "objects": [o], "description": o, "actions": []}]})
+    fake = SimpleNamespace(responses=FakeResponses([merged, single(2.0, "bottle"), single(4.0, "moon")]))
+    obs, stats = extract_observations(frames, batch_size=3, client=fake)
+    assert [o["timestamp"] for o in obs] == [0.0, 2.0, 4.0]
+    assert obs[2]["objects"] == ["moon"]
+    assert stats["vision_calls"] == 3 and stats["frames_retried"] == 2 and not stats["errors"]
+
+
 def test_answer_uses_text_only_call():
     mem = demo_memory()
     fake = SimpleNamespace(responses=FakeResponses(["The bottle was visible at [4.0s]."]))
