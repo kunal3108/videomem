@@ -56,6 +56,9 @@ _sorted_ts      = [0.0, 2.0, 4.0, ...]              # sorted list for range quer
 - Sets deduplicate event IDs when an object appears multiple times or when several index paths hit the same event.
 
 ## System design notes
+
+<p align="center"><img src="docs/system-design.png" alt="VideoMem pipeline: video upload → OpenCV frame sampling → OpenAI vision model → memory engine → retrieval engine → grounded answer" width="540"></p>
+
 - **Cache key** = SHA-256 of the video file + sampling interval → re-uploading the same video loads memory with **0 vision calls**.
 - **Batching**: 4 frames per vision request (configurable), each labeled with its timestamp; returned timestamps are snapped to real sampled times so the model can't invent times.
 - **Grounding**: answer prompt only contains retrieved observations; it must cite `[t s]` and say when information is not in memory. If nothing matches, the model gets an explicit empty-evidence notice plus the list of all indexed objects.
