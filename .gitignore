@@ -1,0 +1,17 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Environment
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.streamlit/secrets.toml
+
+# Local data (uploaded videos, cached memories, metrics)
+data/*
+!data/.gitkeep
+!data/demo_observations.json
+.claude/

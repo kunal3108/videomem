@@ -1,0 +1,5 @@
+openai>=2.0
+opencv-python
+streamlit
+python-dotenv
+pandas

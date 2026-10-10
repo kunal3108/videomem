@@ -1,0 +1,22 @@
+{
+  "_note": "SYNTHETIC DEMO DATA. Hand-written sample observations for a fictional 30s desk scene. NOT AI analysis of any uploaded video.",
+  "duration": 30.0,
+  "sample_interval": 2.0,
+  "observations": [
+    {"timestamp": 0.0, "objects": ["desk", "laptop", "chair"], "description": "An empty desk with a closed laptop and a chair.", "actions": []},
+    {"timestamp": 2.0, "objects": ["desk", "laptop", "chair", "person"], "description": "A person enters the frame from the left near the desk.", "actions": ["walking"]},
+    {"timestamp": 4.0, "objects": ["person", "bottle", "desk", "laptop"], "description": "A person is holding a water bottle next to the desk.", "actions": ["holding bottle"]},
+    {"timestamp": 6.0, "objects": ["person", "bottle", "desk", "laptop", "chair"], "description": "The person sits on the chair with the bottle in hand.", "actions": ["sitting", "holding bottle"]},
+    {"timestamp": 8.0, "objects": ["person", "bottle", "desk", "laptop"], "description": "The bottle is on the desk and the person is opening the laptop.", "actions": ["opening laptop"]},
+    {"timestamp": 10.0, "objects": ["person", "bottle", "desk", "laptop"], "description": "The person is typing on the open laptop; the bottle stands on the desk.", "actions": ["typing"]},
+    {"timestamp": 12.0, "objects": ["person", "bottle", "desk", "laptop"], "description": "The person continues typing on the laptop.", "actions": ["typing"]},
+    {"timestamp": 14.0, "objects": ["person", "bottle", "desk", "laptop", "phone"], "description": "The person picks up a phone from the desk.", "actions": ["holding phone"]},
+    {"timestamp": 16.0, "objects": ["person", "bottle", "desk", "laptop", "phone"], "description": "The person looks at the phone screen.", "actions": ["looking at phone"]},
+    {"timestamp": 18.0, "objects": ["person", "desk", "laptop", "phone", "mug"], "description": "A mug is now visible on the desk; the bottle is not visible.", "actions": []},
+    {"timestamp": 20.0, "objects": ["person", "desk", "laptop", "mug"], "description": "The person drinks from the mug.", "actions": ["drinking from mug"]},
+    {"timestamp": 22.0, "objects": ["person", "desk", "laptop", "mug"], "description": "The person types on the laptop with the mug beside it.", "actions": ["typing"]},
+    {"timestamp": 24.0, "objects": ["person", "desk", "laptop", "mug", "chair"], "description": "The person stands up from the chair.", "actions": ["standing up"]},
+    {"timestamp": 26.0, "objects": ["person", "desk", "laptop", "mug"], "description": "The person walks away toward the right edge of the frame.", "actions": ["walking"]},
+    {"timestamp": 28.0, "objects": ["desk", "laptop", "mug", "chair"], "description": "The desk with an open laptop and a mug; no person visible.", "actions": []}
+  ]
+}
