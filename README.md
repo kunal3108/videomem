@@ -42,7 +42,7 @@ Question ► retrieve.py ── parse objects + times → hash lookups → evide
 | `app.py` | Streamlit UI |
 | `test_videomem.py` | Offline tests (mocked OpenAI client, synthetic video) |
 
-## DSA concepts
+## Concepts
 ```python
 events_by_id    = {"event_003": {...}}              # dict: primary store
 object_index    = {"bottle": {"event_003", ...}}    # dict[str, set]: inverted index
@@ -55,7 +55,7 @@ _sorted_ts      = [0.0, 2.0, 4.0, ...]              # sorted list for range quer
 - `search_events(query)` — combines O(1) object-index hits with a keyword scan of descriptions/actions, which is **O(N)** in the number of events, then ranks candidates (O(m log m)). Exact-key lookups are O(1) on average; scanning or ranking across many events costs more.
 - Sets deduplicate event IDs when an object appears multiple times or when several index paths hit the same event.
 
-## System design notes
+## System design 
 - **Cache key** = SHA-256 of the video file + sampling interval → re-uploading the same video loads memory with **0 vision calls**.
 - **Batching**: 4 frames per vision request (configurable), each labeled with its timestamp; returned timestamps are snapped to real sampled times so the model can't invent times.
 - **Grounding**: answer prompt only contains retrieved observations; it must cite `[t s]` and say when information is not in memory. If nothing matches, the model gets an explicit empty-evidence notice plus the list of all indexed objects.
